@@ -59,10 +59,6 @@ export default function DecoratorsScreen() {
   const filterPackages = () => {
     let availablePackages = packages;
 
-    // Filter out unavailable packages
-    const unavailablePackageIds = unavailablePackages.map(pkg => pkg.package_id);
-    availablePackages = availablePackages.filter(pkg => !unavailablePackageIds.includes(pkg.package_id));
-
     // Filter by location
     if (locationFilter) {
       availablePackages = availablePackages.filter(pkg => pkg.location === locationFilter);
@@ -79,12 +75,12 @@ export default function DecoratorsScreen() {
       const formattedEndDate = new Date(endDate).toISOString().split('T')[0];
 
       availablePackages = availablePackages.filter(pkg => {
-        const isAvailable = unavailablePackages.every(unavailable => {
-          return !(pkg.package_id === unavailable.package_id &&
+        const isUnavailable = unavailablePackages.some(unavailable => {
+          return pkg.package_id === unavailable.package_id &&
             unavailable.non_availability_date >= formattedStartDate &&
-            unavailable.non_availability_date <= formattedEndDate);
+            unavailable.non_availability_date <= formattedEndDate;
         });
-        return isAvailable;
+        return !isUnavailable; // Keep packages that are not unavailable in the date range
       });
     }
 
@@ -119,7 +115,7 @@ export default function DecoratorsScreen() {
         <TextInput
           style={styles.input}
           placeholder="Start Date (YYYY-MM-DD)"
-          value={startDate}
+ value={startDate}
           onChangeText={(text) => {
             if (text.length <= 10) {
               setStartDate(text);
